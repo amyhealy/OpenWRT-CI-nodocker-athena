@@ -49,7 +49,7 @@ UPDATE_PACKAGE() {
 # UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
 
 # UPDATE_PACKAGE "luci-app-oaf" "destan19/OpenAppFilter" "master"
-UPDATE_PACKAGE "honk" "QiuSimons/luci-app-honk" "master"
+# UPDATE_PACKAGE "honk" "QiuSimons/luci-app-honk" "master"
 UPDATE_PACKAGE "ddnsto" "linkease/ddnsto-openwrt-package" "main"
 UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "v2.4.8"
 UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "v2.5.0-beta.1"
@@ -133,4 +133,13 @@ UPDATE_VERSION() {
 #引入私有扩展脚本
 if [ -f "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh" ]; then
 	source "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh"
+fi
+
+# Honk 仓库包含 honk 和 luci-app-honk 两个包
+HONK_DIR="./package/honk"
+if [ ! -d "$HONK_DIR" ]; then
+	git clone --depth=1 --single-branch --branch master \
+		https://github.com/QiuSimons/luci-app-honk.git "$HONK_DIR"
+else
+	echo "$HONK_DIR already exists; skip cloning Honk"
 fi
