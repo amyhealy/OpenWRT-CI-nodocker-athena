@@ -209,6 +209,87 @@ jobs:
 
           make download -j$(nproc)
 
+      - name: Prepare Honk Toolchain
+        if: ${{ !inputs.WRT_TEST }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/wrt"
+
+          HONK_DIR="$PWD/package/honk/honk"
+
+          if [ ! -f "$HONK_DIR/honk_toolchain.sh" ]; then
+            echo "ERROR: Honk toolchain script not found: $HONK_DIR"
+            exit 1
+          fi
+
+          # 安装 Honk 所需的宿主机依赖
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang llvm libbpf-dev cmake libclang-dev zstd \
+            make perl file binutils git curl xz-utils \
+            pkg-config ca-certificates
+
+          # Honk 使用 rustup 管理 Rust 工具链
+          if [ -f "$HOME/.cargo/env" ]; then
+            source "$HOME/.cargo/env"
+          fi
+
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -fsSL \
+              https://sh.rustup.rs -o "$RUNNER_TEMP/honk-rustup-init.sh"
+            sh "$RUNNER_TEMP/honk-rustup-init.sh" \
+              -y --profile minimal --no-modify-path
+          fi
+
+          source "$HOME/.cargo/env"
+          export PATH="$HOME/.cargo/bin:/usr/local/bin:$PATH"
+
+          # 读取与当前 Honk 源码匹配的工具版本
+          HONK_PINS="$(bash "$HONK_DIR/honk_toolchain.sh")"
+          eval "$HONK_PINS"
+
+          echo "Required Zig: $ZIG_VERSION"
+          echo "Required bpf-linker: $BPF_LINKER_VERSION"
+
+          # GitHub ubuntu runner 为 x86_64 宿主机
+          test "$(uname -m)" = "x86_64"
+
+          # 安装指定版本的 Zig
+          curl -fSL --retry 3 \
+            "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
+            -o "$RUNNER_TEMP/honk-zig.tar.xz"
+
+          sudo tar -xJf "$RUNNER_TEMP/honk-zig.tar.xz" \
+            -C /usr/local
+
+          sudo ln -sfn \
+            "/usr/local/zig-x86_64-linux-${ZIG_VERSION}/zig" \
+            /usr/local/bin/zig
+
+          # 安装指定版本的 bpf-linker，并验证 SHA256
+          curl -fSL --retry 3 \
+            "https://github.com/aya-rs/bpf-linker/releases/download/v${BPF_LINKER_VERSION}/bpf-linker-x86_64-unknown-linux-musl.tar.zst" \
+            -o "$RUNNER_TEMP/honk-bpf-linker.tar.zst"
+
+          echo "${BPF_LINKER_SHA256}  $RUNNER_TEMP/honk-bpf-linker.tar.zst" \
+            | sha256sum -c -
+
+          sudo tar --zstd \
+            -xf "$RUNNER_TEMP/honk-bpf-linker.tar.zst" \
+            -C /usr/local/bin
+
+          # 将工具路径传递给后续构建步骤
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          echo "/usr/local/bin" >> "$GITHUB_PATH"
+
+          # 验证工具可用及 Zig 版本一致
+          zig version
+          test "$(zig version)" = "$ZIG_VERSION"
+          bpf-linker --version
+          cargo --version
+          rustup --version
+
       - name: Compile Firmware
         if: ${{ !inputs.WRT_TEST }}
         run: |
