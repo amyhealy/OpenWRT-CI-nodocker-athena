@@ -150,5 +150,14 @@ if [ ! -d "$DDNSTO_DIR" ]; then
 	git clone --depth=1 --single-branch --branch main \
 		https://github.com/linkease/ddnsto-openwrt-package.git "$DDNSTO_DIR"
 else
+
+VMLINUX_BTF_DIR="./package/vmlinux-btf"
+
+if [ ! -d "$VMLINUX_BTF_DIR" ]; then
+	git clone --depth=1 --single-branch --branch master \
+		https://github.com/QiuSimons/vmlinux-btf.git "$VMLINUX_BTF_DIR"
+else
+	echo "$VMLINUX_BTF_DIR already exists; skip cloning vmlinux-btf"
+fi
 	echo "$DDNSTO_DIR already exists; skip cloning DDNSTO"
 fi
