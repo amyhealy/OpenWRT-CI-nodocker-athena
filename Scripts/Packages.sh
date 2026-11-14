@@ -51,7 +51,7 @@ UPDATE_PACKAGE() {
 # UPDATE_PACKAGE "luci-app-oaf" "destan19/OpenAppFilter" "master"
 # UPDATE_PACKAGE "honk" "QiuSimons/luci-app-honk" "master"
 # UPDATE_PACKAGE "ddnsto" "linkease/ddnsto-openwrt-package" "main"
-UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "v2.4.8"
+UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "release/v2.4.8-hotfix"
 UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "v2.5.0-beta.1"
 # UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
 # UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
