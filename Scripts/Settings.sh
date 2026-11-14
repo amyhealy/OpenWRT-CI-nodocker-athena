@@ -51,3 +51,7 @@ if [[ "${WRT_TARGET^^}" == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
+
+# 默认使用 NSS 11.4 固件
+sed -i "s/option firmware '12.5'/option firmware '11.4'/" \
+	package/qca-nss/nss-wifi-drv/files/nss-wifi.config
