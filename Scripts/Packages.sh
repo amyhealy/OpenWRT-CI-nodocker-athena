@@ -34,9 +34,23 @@ UPDATE_PACKAGE() {
 	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git"
 
 	# 处理克隆的仓库
-	if [[ "$PKG_SPECIAL" == "pkg" ]]; then
-		find ./$REPO_NAME/*/ -maxdepth 3 -type d -iname "*$PKG_NAME*" -prune -exec cp -rf {} ./ \;
-		rm -rf ./$REPO_NAME/
+    if [[ "$PKG_SPECIAL" == "pkg" ]]; then
+        local PACKAGE_DIRS
+        PACKAGE_DIRS=$(find "./$REPO_NAME" -type d -name "$PKG_NAME" -prune -print)
+
+    if [ -z "$PACKAGE_DIRS" ]; then
+        echo "ERROR: package directory '$PKG_NAME' not found in $PKG_REPO"
+        return 1
+    fi
+
+    mkdir -p ./package
+    while IFS= read -r DIR; do
+        cp -a "$DIR" ./package/
+    done <<< "$PACKAGE_DIRS"
+
+    rm -rf "./$REPO_NAME"
+
+
 	elif [[ "$PKG_SPECIAL" == "name" ]]; then
 		mv -f $REPO_NAME $PKG_NAME
 	fi
